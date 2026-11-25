@@ -1,678 +1,841 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Озвучка-Баттл — Прототип</title>
-  <style>
-    :root {
-      --bg: #0d0f14;
-      --surface: #161a22;
-      --surface-2: #1f2530;
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-      --accent: #3b82f6;
-      --danger: #ef4444;
-      --success: #10b981;
-      --warn: #f59e0b;
-      --border: #2a313f;
-    }
-
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      min-height: 100dvh;
-    }
-
-    .app {
-      width: 100%;
-      max-width: 460px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    h1 { font-size: 18px; margin: 0; font-weight: 700; }
-
-    .pills {
-      display: flex;
-      gap: 6px;
-    }
-
-    .pill {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .mode-switch {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: var(--surface);
-      padding: 4px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-    }
-
-    .mode-btn {
-      padding: 8px;
-      font-size: 13px;
-      background: transparent;
-      color: var(--muted);
-      border-radius: 9px;
-    }
-
-    .mode-btn.active {
-      background: var(--surface-2);
-      color: var(--text);
-    }
-
-    .stage {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 10px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .countdown-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(13, 15, 20, 0.88);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 64px;
-      font-weight: 800;
-      color: var(--warn);
-      z-index: 10;
-    }
-
-    .countdown-overlay.show { display: flex; }
-
-    .scene-meta {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .character {
-      font-size: 64px;
-      line-height: 1.1;
-      margin: 4px 0;
-    }
-
-    .character.talking {
-      animation: talk 0.3s infinite alternate;
-    }
-
-    @keyframes talk {
-      from { transform: scale(1) rotate(-3deg); }
-      to { transform: scale(1.1) rotate(3deg); }
-    }
-
-    video {
-      width: 100%;
-      max-height: 190px;
-      border-radius: 12px;
-      background: #000;
-      display: none;
-      object-fit: cover;
-    }
-
-    .subtitle {
-      font-size: 17px;
-      font-weight: 600;
-      line-height: 1.35;
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .bars {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .bar-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .bar-row span { width: 58px; text-align: left; }
-
-    .track {
-      flex: 1;
-      height: 6px;
-      background: var(--surface-2);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .fill-time {
-      height: 100%;
-      width: 0%;
-      background: var(--accent);
-      transition: width 0.08s linear;
-    }
-
-    .fill-mic {
-      height: 100%;
-      width: 0%;
-      background: var(--success);
-      transition: width 0.05s linear;
-    }
-
-    .effects {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-    }
-
-    button {
-      border: none;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      color: #fff;
-      background: var(--accent);
-      padding: 13px;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-
-    button:active { transform: scale(0.98); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
-    button.recording { background: var(--danger); }
-    button.secondary {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    .effect-btn {
-      padding: 9px 4px;
-      font-size: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--muted);
-    }
-
-    .effect-btn.active {
-      border-color: var(--accent);
-      color: var(--text);
-      background: rgba(59, 130, 246, 0.16);
-    }
-
-    .row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .result {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px 14px;
-      display: none;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .result.show { display: flex; }
-
-    .score-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .score-num {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--success);
-    }
-
-    .scoreboard {
-      display: none;
-      justify-content: space-between;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-size: 13px;
-    }
-
-    .scoreboard.show { display: flex; }
-
-    .upload-label {
-      display: block;
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-      padding: 8px;
-      border: 1px dashed var(--border);
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    input[type="file"] { display: none; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0d0f14" />
+<title>Озвучка-Баттл PRO</title>
+<style>
+  :root {
+    --bg: #0d0f14; --surface: #161a22; --surface-2: #1f2530;
+    --text: #f3f4f6; --muted: #9ca3af;
+    --accent: #3b82f6; --accent-2: #8b5cf6;
+    --danger: #ef4444; --success: #10b981;
+    --warn: #f59e0b; --gold: #fbbf24; --border: #2a313f;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #1a2030 0%, var(--bg) 60%);
+    color: var(--text); display: flex; justify-content: center;
+    min-height: 100dvh; overflow-x: hidden;
+  }
+  .app { width: 100%; max-width: 480px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  h1 {
+    font-size: 17px; margin: 0; font-weight: 800;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap;
+  }
+  .pills { display: flex; gap: 4px; }
+  .pill {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 4px 8px; border-radius: 999px; font-size: 10px; color: var(--muted);
+  }
+  .sound-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 6px 10px; border-radius: 10px; font-size: 14px; color: var(--text); cursor: pointer;
+  }
+  .progress-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
+  .level-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .level-info strong { color: var(--gold); }
+  .progress-bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.5s ease; }
+  .mode-switch {
+    display: grid; grid-template-columns: 1fr 1fr; background: var(--surface);
+    padding: 4px; border-radius: 12px; border: 1px solid var(--border);
+  }
+  .mode-btn {
+    padding: 9px; font-size: 13px; background: transparent; color: var(--muted);
+    border-radius: 9px; border: none; font-weight: 600; cursor: pointer;
+  }
+  .mode-btn.active { background: var(--surface-2); color: var(--text); }
+  .scoreboard {
+    display: none; justify-content: space-between; align-items: center;
+    background: linear-gradient(135deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 12px;
+  }
+  .scoreboard.show { display: flex; }
+  .scoreboard .active-player { color: var(--gold); font-weight: 800; }
+  .scoreboard strong { font-size: 11px; color: var(--accent); text-align: center; }
+  .stage {
+    background: linear-gradient(160deg, var(--surface), #11151d);
+    border: 1px solid var(--border); border-radius: 18px;
+    padding: 16px; display: flex; flex-direction: column;
+    align-items: center; text-align: center; gap: 10px;
+    position: relative; overflow: hidden;
+  }
+  .countdown-overlay {
+    position: absolute; inset: 0; background: rgba(13,15,20,0.9);
+    display: none; align-items: center; justify-content: center;
+    font-size: 96px; font-weight: 900; color: var(--warn); z-index: 20; font-family: monospace;
+  }
+  .countdown-overlay.show { display: flex; animation: pulse 0.5s ease; }
+  @keyframes pulse { 0%{transform:scale(1.5);opacity:0} 100%{transform:scale(1);opacity:1} }
+  .scene-meta { width: 100%; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .character { font-size: 64px; line-height: 1.1; margin: 4px 0; transition: transform 0.2s; }
+  .character.talking { animation: talk 0.3s infinite alternate; }
+  @keyframes talk { from{transform:scale(1) rotate(-3deg)} to{transform:scale(1.1) rotate(3deg)} }
+  video { width: 100%; max-height: 200px; border-radius: 12px; background: #000; display: none; object-fit: cover; }
+  .subtitle { font-size: 17px; font-weight: 600; line-height: 1.4; min-height: 50px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+  .bars { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+  .bar-row span { width: 58px; text-align: left; }
+  .track { flex: 1; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .fill-time { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.08s linear; }
+  .fill-mic { height: 100%; width: 0%; background: linear-gradient(90deg, var(--success), #34d399); transition: width 0.05s linear; }
+  button {
+    border: none; border-radius: 12px; font-size: 14px; font-weight: 700;
+    cursor: pointer; color: #fff; background: var(--accent); padding: 13px;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.recording { background: var(--danger); animation: pulse-red 1s infinite; }
+  @keyframes pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7)} 50%{box-shadow:0 0 0 10px rgba(239,68,68,0)} }
+  button.secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .record-main { background: linear-gradient(90deg, var(--accent), var(--accent-2)); font-size: 15px; padding: 15px; }
+  .effects { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .effect-btn { padding: 9px 4px; font-size: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+  .effect-btn.active { border-color: var(--accent); color: var(--text); background: rgba(59,130,246,0.16); }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .result {
+    background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.1));
+    border: 1px solid var(--success); border-radius: 14px;
+    padding: 14px; display: none; flex-direction: column; gap: 8px;
+    animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .result.show { display: flex; }
+  .score-line { display: flex; justify-content: space-between; align-items: center; }
+  .score-num { font-size: 26px; font-weight: 900; color: var(--success); }
+  .stars { font-size: 20px; letter-spacing: 2px; color: var(--gold); }
+  .upload-label {
+    display: block; text-align: center; font-size: 12px; color: var(--muted);
+    padding: 10px; border: 1px dashed var(--border); border-radius: 10px; cursor: pointer;
+  }
+  input[type="file"] { display: none; }
+  .dot-nav { display: flex; justify-content: center; gap: 6px; padding: 4px 0; flex-wrap: wrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-2); transition: 0.2s; }
+  .dot.active { background: var(--accent); width: 20px; border-radius: 4px; }
+  .dot.done { background: var(--success); }
+  .achievement {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-150%);
+    background: linear-gradient(135deg, var(--gold), #f59e0b);
+    color: #111; padding: 12px 20px; border-radius: 12px;
+    font-weight: 800; font-size: 14px; z-index: 1000;
+    box-shadow: 0 10px 30px rgba(251,191,36,0.4);
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  }
+  .achievement.show { transform: translateX(-50%) translateY(0); }
+  #confetti { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 500; }
+  .loading-vid {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6); border-radius: 12px; font-size: 13px; color: var(--muted); z-index: 5;
+  }
+  .video-wrap { position: relative; width: 100%; }
+  .winner-overlay {
+    position: fixed; inset: 0; background: rgba(13,15,20,0.92);
+    display: none; align-items: center; justify-content: center;
+    z-index: 2000; padding: 20px;
+  }
+  .winner-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .winner-card {
+    background: linear-gradient(160deg, #1a2030, #161a22);
+    border: 2px solid var(--gold); border-radius: 24px;
+    padding: 32px 24px; text-align: center;
+    max-width: 360px; width: 100%;
+    box-shadow: 0 20px 60px rgba(251,191,36,0.3);
+    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  }
+  @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .winner-title { font-size: 24px; font-weight: 800; color: var(--gold); margin-bottom: 12px; }
+  .winner-score { font-size: 42px; font-weight: 900; color: var(--text); margin-bottom: 8px; font-family: monospace; }
+</style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <h1>🎙️ Озвучка-Баттл</h1>
-      <div class="pills">
-        <div class="pill" id="sceneBadge">Сцена 1/4</div>
-        <div class="pill" id="timeBadge">5.0 сек</div>
-      </div>
-    </header>
+<div class="app">
 
-    <div class="mode-switch">
-      <button class="mode-btn active" id="soloBtn" type="button">Соло-режим</button>
-      <button class="mode-btn" id="duelBtn" type="button">Дуэль (2 игрока)</button>
+  <header>
+    <h1>🎙️ Озвучка-Баттл PRO</h1>
+    <div class="pills">
+      <div class="pill" id="sceneBadge">1/10</div>
+      <div class="pill" id="timeBadge">6.0с</div>
     </div>
+    <button class="sound-btn" id="soundBtn" title="Звук">🔊</button>
+  </header>
 
-    <div class="scoreboard" id="scoreboard">
-      <span id="p1Score">Игрок 1: 0</span>
-      <strong id="turnLabel">Ход: Игрок 1</strong>
-      <span id="p2Score">Игрок 2: 0</span>
+  <div class="progress-block">
+    <div class="level-info">
+      <span>Уровень <strong id="levelText">1</strong></span>
+      <span><strong id="xpText">0</strong> / 100 XP</span>
     </div>
+    <div class="progress-bar"><div class="progress-fill" id="xpFill"></div></div>
+  </div>
 
-    <div class="stage">
-      <div class="countdown-overlay" id="countdown">3</div>
-      <div class="scene-meta">
-        <span id="genreText">Мультфильм</span>
-        <span id="moodText">Эмоция: Паника</span>
-      </div>
+  <div class="mode-switch">
+    <button class="mode-btn active" id="soloBtn" type="button">Соло</button>
+    <button class="mode-btn" id="duelBtn" type="button">Дуэль</button>
+  </div>
 
-      <div class="character" id="avatar">🐿️</div>
-      <video id="customVideo" playsinline muted></video>
-      <div class="subtitle" id="subtitle">«Я не трогал твои орехи! Это всё соседский кот!»</div>
+  <div class="scoreboard" id="scoreboard">
+    <span id="p1Score">Игрок 1: 0</span>
+    <strong id="turnLabel">Р1/3 · Ход И1</strong>
+    <span id="p2Score">Игрок 2: 0</span>
+  </div>
 
-      <div class="bars">
-        <div class="bar-row">
-          <span>Таймер</span>
-          <div class="track"><div class="fill-time" id="timeFill"></div></div>
-        </div>
-        <div class="bar-row">
-          <span>Голос</span>
-          <div class="track"><div class="fill-mic" id="micFill"></div></div>
-        </div>
-      </div>
+  <div class="stage">
+    <div class="countdown-overlay" id="countdown">3</div>
+    <div class="scene-meta">
+      <span id="genreText">Мультфильм</span>
+      <span id="moodText">Эмоция: Паника</span>
     </div>
-
-    <button id="recordBtn" type="button">● Начать озвучку (отсчёт 3 сек)</button>
-
-    <div class="effects">
-      <button class="effect-btn active" data-fx="normal" type="button">Оригинал</button>
-      <button class="effect-btn" data-fx="chipmunk" type="button">Бурундук</button>
-      <button class="effect-btn" data-fx="villain" type="button">Злодей</button>
-      <button class="effect-btn" data-fx="radio" type="button">Рация</button>
+    <div class="character" id="avatar">🐰</div>
+    <div class="video-wrap">
+      <video id="customVideo" playsinline muted preload="metadata" crossorigin="anonymous"></video>
+      <div class="loading-vid" id="vidLoading">⏳ Загрузка видео...</div>
     </div>
-
-    <div class="row-2">
-      <button class="secondary" id="playBtn" type="button" disabled>▶ Слушать дубль</button>
-      <button class="secondary" id="nextBtn" type="button">Следующая →</button>
-    </div>
-
-    <label class="upload-label">
-      🎬 Загрузить своё видео/мультик из галереи для озвучки
-      <input type="file" id="videoInput" accept="video/*" />
-    </label>
-
-    <div class="result" id="resultBox">
-      <div class="score-line">
-        <span>Оценка дубля</span>
-        <span class="score-num" id="scoreNum">0 / 100</span>
-      </div>
-      <div style="font-size: 13px; color: var(--muted);" id="scoreDesc"></div>
+    <div class="subtitle" id="subtitle">«Я не трогал твои орехи!»</div>
+    <div class="bars">
+      <div class="bar-row"><span>Таймер</span><div class="track"><div class="fill-time" id="timeFill"></div></div></div>
+      <div class="bar-row"><span>Голос</span><div class="track"><div class="fill-mic" id="micFill"></div></div></div>
     </div>
   </div>
 
-  <script>
-    const scenes = [
-      {
-        genre: "Мультфильм",
-        mood: "Эмоция: Паника",
-        avatar: "🐿️",
-        text: "«Я не трогал твои орехи! Это всё соседский кот!»",
-        duration: 5000
-      },
-      {
-        genre: "Боевик",
-        mood: "Эмоция: Пафос",
-        avatar: "🕵️‍♂️",
-        text: "«Не режь красный провод... А, ладно, всё равно уже поздно!»",
-        duration: 5500
-      },
-      {
-        genre: "Фантастика",
-        mood: "Эмоция: Удивление",
-        avatar: "👽",
-        text: "«Земляне, мы прилетели с миром... но случайно припарковались на ваш гараж.»",
-        duration: 6000
-      },
-      {
-        genre: "Сказка",
-        mood: "Эмоция: Злодейский смех",
-        avatar: "🧙‍♂️",
-        text: "«Никто не пройдёт через этот мост! Кроме тех, у кого есть печеньки.»",
-        duration: 5500
+  <div class="dot-nav" id="dotNav"></div>
+
+  <button class="record-main" id="recordBtn" type="button">● Начать озвучку</button>
+
+  <div class="effects">
+    <button class="effect-btn active" data-fx="normal" type="button">🎤 Оригинал</button>
+    <button class="effect-btn" data-fx="chipmunk" type="button">🐿️ Бурундук</button>
+    <button class="effect-btn" data-fx="villain" type="button">🦹 Злодей</button>
+    <button class="effect-btn" data-fx="radio" type="button">📻 Рация</button>
+    <button class="effect-btn" data-fx="robot" type="button">🤖 Робот</button>
+    <button class="effect-btn" data-fx="echo" type="button">🌀 Эхо</button>
+  </div>
+
+  <div class="row-3">
+    <button class="secondary" id="playBtn" type="button" disabled>▶ Слушать</button>
+    <button class="secondary" id="saveBtn" type="button" disabled>💾</button>
+    <button class="secondary" id="shareBtn" type="button" disabled>📤</button>
+  </div>
+
+  <div class="row-2">
+    <button class="secondary" id="prevBtn" type="button">← Назад</button>
+    <button class="secondary" id="nextBtn" type="button">Далее →</button>
+  </div>
+
+  <label class="upload-label">
+    🎬 Загрузить своё видео
+    <input type="file" id="videoInput" accept="video/*" />
+  </label>
+
+  <div class="result" id="resultBox">
+    <div class="score-line">
+      <span>Оценка</span>
+      <span class="score-num" id="scoreNum">0</span>
+    </div>
+    <div class="stars" id="stars">☆☆☆☆☆</div>
+    <div style="font-size:13px;color:var(--muted);" id="scoreDesc"></div>
+  </div>
+
+</div>
+
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-card">
+    <div style="font-size: 72px; margin-bottom: 8px;" id="winnerEmoji">🏆</div>
+    <div class="winner-title" id="winnerTitle">Победил Игрок 1!</div>
+    <div class="winner-score" id="winnerScore">0 : 0</div>
+    <div style="font-size: 13px; color: #9ca3af; margin-bottom: 20px;" id="winnerSubtitle">Раунд 3 из 3</div>
+    <button class="record-main" id="newDuelBtn" style="width: 100%; margin-bottom: 8px;">🔄 Новая дуэль</button>
+    <button class="secondary" id="closeWinnerBtn" style="width: 100%;">← В соло-режим</button>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+<div class="achievement" id="achievement"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  const scenes = [
+    { genre:"Мультфильм", mood:"Паника", avatar:"🐰", text:"«Я не трогал твои орехи! Это всё соседский кот!»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
+    { genre:"Фантастика", mood:"Удивление", avatar:"👽", text:"«Земляне, мы прилетели с миром... но припарковались на ваш гараж.»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" },
+    { genre:"Фэнтези", mood:"Драма", avatar:"🐉", text:"«Синтел, я ждал тебя сотни лет... где ты была?»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" },
+    { genre:"Боевик", mood:"Героизм", avatar:"🤖", text:"«Это мой последний бой. Передай маме, что я выключил плиту.»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" },
+    { genre:"Экшн", mood:"Паника", avatar:"🔥", text:"«Пожар! Хватай кота и печеньки!»", duration:5500, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" },
+    { genre:"Приключение", mood:"Азарт", avatar:"🏃", text:"«Беги! Я прикрою... или нет. Я тоже бегу!»", duration:5500, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" },
+    { genre:"Комедия", mood:"Радость", avatar:"🎉", text:"«Я выиграл! Хотя нет, это была реклама...»", duration:5500, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" },
+    { genre:"Гонки", mood:"Адреналин", avatar:"🚗", text:"«Педаль в пол! Если что — я не я, и коробка не моя.»", duration:5500, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" },
+    { genre:"Драма", mood:"Отчаяние", avatar:"😱", text:"«Я ждал тебя 20 лет... а ты пришёл за солью.»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4" },
+    { genre:"Авто", mood:"Спокойствие", avatar:"🚙", text:"«Это не просто машина. Это мой маленький танк.»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4" }
+  ];
+
+  const state = {
+    sceneIndex: 0,
+    isDuel: false,
+    currentPlayer: 1,
+    scores: { 1: 0, 2: 0 },
+    duelRound: 1,
+    duelRounds: 3,
+    duelFinished: false,
+    duelSceneIndices: [],
+    mediaRecorder: null,
+    chunks: [],
+    audioBlob: null,
+    isRecording: false,
+    isCountingDown: false,
+    recordTimer: null,
+    micStream: null,
+    voiceFrames: 0,
+    totalFrames: 0,
+    selectedFx: 'normal',
+    customVideoUrl: null,
+    soundOn: true,
+    xp: 0,
+    level: 1,
+    bestScores: {},
+    totalRecords: 0,
+    unlockedAchievements: {},
+    currentScore: 0
+  };
+
+  const $ = id => document.getElementById(id);
+  const els = {
+    recordBtn:$('recordBtn'), playBtn:$('playBtn'), saveBtn:$('saveBtn'), shareBtn:$('shareBtn'),
+    prevBtn:$('prevBtn'), nextBtn:$('nextBtn'), avatar:$('avatar'), customVideo:$('customVideo'),
+    subtitle:$('subtitle'), sceneBadge:$('sceneBadge'), timeBadge:$('timeBadge'),
+    genreText:$('genreText'), moodText:$('moodText'), timeFill:$('timeFill'), micFill:$('micFill'),
+    countdown:$('countdown'), resultBox:$('resultBox'), scoreNum:$('scoreNum'),
+    scoreDesc:$('scoreDesc'), stars:$('stars'), soundBtn:$('soundBtn'),
+    levelText:$('levelText'), xpText:$('xpText'), xpFill:$('xpFill'),
+    dotNav:$('dotNav'), achievement:$('achievement'), confetti:$('confetti'),
+    scoreboard:$('scoreboard'), p1Score:$('p1Score'), p2Score:$('p2Score'), turnLabel:$('turnLabel'),
+    vidLoading:$('vidLoading'), winnerOverlay:$('winnerOverlay'),
+    winnerEmoji:$('winnerEmoji'), winnerTitle:$('winnerTitle'),
+    winnerScore:$('winnerScore'), winnerSubtitle:$('winnerSubtitle')
+  };
+
+  let audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function tone(freq, dur, type, vol) {
+    if (!state.soundOn) return;
+    const ctx = getCtx(); if (!ctx) return;
+    const osc = ctx.createOscillator(); const g = ctx.createGain();
+    osc.type = type || 'sine'; osc.frequency.value = freq; g.gain.value = vol || 0.12;
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.stop(ctx.currentTime + dur);
+  }
+  const sfx = {
+    tick: () => tone(440, 0.1, 'sine', 0.1),
+    start: () => tone(880, 0.25, 'sine', 0.15),
+    success: () => { tone(523,0.1,'sine',0.15); setTimeout(()=>tone(659,0.1,'sine',0.15),100); setTimeout(()=>tone(784,0.25,'sine',0.15),200); },
+    fail: () => { tone(392,0.2,'sine',0.15); setTimeout(()=>tone(330,0.3,'sine',0.15),150); },
+    click: () => tone(660, 0.05, 'triangle', 0.08)
+  };
+  function haptic(ms) { if (navigator.vibrate) navigator.vibrate(ms || 20); }
+
+  function saveProgress() {
+    try { localStorage.setItem('voicebattle', JSON.stringify({
+      xp: state.xp, level: state.level, bestScores: state.bestScores,
+      totalRecords: state.totalRecords, achievements: state.unlockedAchievements
+    })); } catch(e) {}
+  }
+  function loadProgress() {
+    try {
+      const d = JSON.parse(localStorage.getItem('voicebattle') || '{}');
+      state.xp = d.xp || 0; state.level = d.level || 1;
+      state.bestScores = d.bestScores || {}; state.totalRecords = d.totalRecords || 0;
+      state.unlockedAchievements = d.achievements || {};
+    } catch(e) {}
+  }
+
+  const ACHIEVEMENTS = {
+    firstRecord: '🎤 Первая озвучка', highScore: '⭐ Мастер дубля (80+)',
+    perfectScore: '🏆 Идеально (95+)', tenRecords: '🔥 10 дублей',
+    allScenes: '🎬 Все сцены пройдены', duelWin: '🥇 Победа в дуэли'
+  };
+  function unlock(key) {
+    if (state.unlockedAchievements[key]) return;
+    state.unlockedAchievements[key] = true; saveProgress();
+    showAchievement(ACHIEVEMENTS[key]); sfx.success();
+  }
+  function showAchievement(text) {
+    els.achievement.textContent = '🏅 ' + text;
+    els.achievement.classList.add('show'); haptic(50);
+    setTimeout(() => els.achievement.classList.remove('show'), 3000);
+  }
+
+  function launchConfetti() {
+    const canvas = els.confetti; const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+    const colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#fbbf24'];
+    const particles = [];
+    for (let i = 0; i < 120; i++) particles.push({
+      x: Math.random() * canvas.width, y: -20 - Math.random()*200,
+      vx: (Math.random()-0.5)*5, vy: Math.random()*2+1,
+      size: Math.random()*8+4, color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360, rotSpeed: (Math.random()-0.5)*12
+    });
+    let frames = 0;
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.rot += p.rotSpeed;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size/2); ctx.restore();
+      });
+      frames++;
+      if (frames < 200) requestAnimationFrame(animate); else canvas.style.display = 'none';
+    }
+    animate();
+  }
+
+  function updateDotNav() {
+    els.dotNav.innerHTML = '';
+    if (state.isDuel && state.duelSceneIndices.length > 0) {
+      state.duelSceneIndices.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'dot';
+        if (i === state.duelRound - 1) d.classList.add('active');
+        else if (i < state.duelRound - 1) d.classList.add('done');
+        els.dotNav.appendChild(d);
+      });
+      return;
+    }
+    scenes.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot';
+      if (i === state.sceneIndex) d.classList.add('active');
+      else if (state.bestScores[i] !== undefined) d.classList.add('done');
+      els.dotNav.appendChild(d);
+    });
+  }
+  function updateLevelUI() {
+    els.levelText.textContent = state.level;
+    els.xpText.textContent = state.xp;
+    const need = state.level * 100;
+    els.xpFill.style.width = Math.min((state.xp / need) * 100, 100) + '%';
+  }
+
+  function updateSceneUI() {
+    const s = scenes[state.sceneIndex];
+    if (state.isDuel) {
+      els.sceneBadge.textContent = `Раунд ${state.duelRound}/${state.duelRounds}`;
+    } else {
+      els.sceneBadge.textContent = state.customVideoUrl ? "Своё" : `${state.sceneIndex+1}/${scenes.length}`;
+    }
+    els.timeBadge.textContent = `${(s.duration/1000).toFixed(1)}с`;
+    els.genreText.textContent = state.customVideoUrl ? "Свой ролик" : s.genre;
+    els.moodText.textContent = state.customVideoUrl ? "Озвучка" : "Эмоция: " + s.mood;
+    els.avatar.textContent = s.avatar;
+    els.subtitle.textContent = state.customVideoUrl ? "Озвучьте происходящее своими словами!" : s.text;
+    els.timeFill.style.width = '0%';
+    els.micFill.style.width = '0%';
+    els.resultBox.classList.remove('show');
+    els.playBtn.disabled = true; els.saveBtn.disabled = true; els.shareBtn.disabled = true;
+    state.audioBlob = null;
+    els.recordBtn.textContent = '● Начать озвучку';
+    els.recordBtn.classList.remove('recording');
+    els.customVideo.onended = null;
+
+    if (state.customVideoUrl) {
+      els.customVideo.src = state.customVideoUrl;
+      els.customVideo.style.display = 'block';
+      els.avatar.style.display = 'none';
+      els.vidLoading.style.display = 'flex';
+    } else if (s.video) {
+      els.customVideo.src = s.video;
+      els.customVideo.style.display = 'block';
+      els.avatar.style.display = 'none';
+      els.vidLoading.style.display = 'flex';
+    } else {
+      els.customVideo.style.display = 'none';
+      els.avatar.style.display = 'block';
+      els.vidLoading.style.display = 'none';
+    }
+    updateDotNav(); updateLevelUI(); updateDuelUI(); updateNextBtnLabel();
+  }
+
+  function updateDuelUI() {
+    els.p1Score.textContent = `Игрок 1: ${state.scores[1]}`;
+    els.p2Score.textContent = `Игрок 2: ${state.scores[2]}`;
+    if (state.isDuel) {
+      if (state.duelFinished) {
+        els.turnLabel.textContent = '🏁 Дуэль окончена';
+      } else {
+        els.turnLabel.textContent = `Р${state.duelRound}/${state.duelRounds} · Ход И${state.currentPlayer}`;
       }
-    ];
+    } else {
+      els.turnLabel.textContent = '';
+    }
+    els.p1Score.className = state.currentPlayer === 1 && !state.duelFinished ? 'active-player' : '';
+    els.p2Score.className = state.currentPlayer === 2 && !state.duelFinished ? 'active-player' : '';
+  }
 
-    let sceneIndex = 0;
-    let isDuel = false;
-    let currentPlayer = 1;
-    let scores = { 1: 0, 2: 0 };
+  function updateNextBtnLabel() {
+    if (!state.isDuel) {
+      els.nextBtn.textContent = 'Далее →';
+      els.nextBtn.disabled = false;
+      return;
+    }
+    if (state.duelFinished) {
+      els.nextBtn.textContent = '🏆 Итоги';
+      els.nextBtn.disabled = false;
+      return;
+    }
+    const hasRecorded = state.audioBlob !== null;
+    if (!hasRecorded) {
+      els.nextBtn.textContent = 'Далее →';
+      els.nextBtn.disabled = true;
+      return;
+    }
+    els.nextBtn.disabled = false;
+    if (state.currentPlayer === 1) {
+      els.nextBtn.textContent = 'Передать Игроку 2 →';
+    } else {
+      els.nextBtn.textContent = state.duelRound >= state.duelRounds ? '🏆 Итоги' : 'Следующий раунд →';
+    }
+  }
 
-    let mediaRecorder = null;
-    let chunks = [];
-    let audioBlob = null;
-    let isRecording = false;
-    let isCountingDown = false;
-    let recordTimer = null;
-    let micStream = null;
-    let voiceFrames = 0;
-    let totalFrames = 0;
-    let selectedFx = "normal";
-    let customVideoUrl = null;
+  function showWinner() {
+    state.duelFinished = true;
+    const s1 = state.scores[1], s2 = state.scores[2];
+    let emoji, title;
+    if (s1 > s2) { emoji = '🏆'; title = 'Победил Игрок 1!'; unlock('duelWin'); }
+    else if (s2 > s1) { emoji = '🏆'; title = 'Победил Игрок 2!'; unlock('duelWin'); }
+    else { emoji = '🤝'; title = 'Ничья!'; }
 
-    const recordBtn = document.getElementById("recordBtn");
-    const playBtn = document.getElementById("playBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const avatar = document.getElementById("avatar");
-    const customVideo = document.getElementById("customVideo");
-    const subtitle = document.getElementById("subtitle");
-    const sceneBadge = document.getElementById("sceneBadge");
-    const timeBadge = document.getElementById("timeBadge");
-    const genreText = document.getElementById("genreText");
-    const moodText = document.getElementById("moodText");
-    const timeFill = document.getElementById("timeFill");
-    const micFill = document.getElementById("micFill");
-    const countdown = document.getElementById("countdown");
-    const resultBox = document.getElementById("resultBox");
-    const scoreNum = document.getElementById("scoreNum");
-    const scoreDesc = document.getElementById("scoreDesc");
+    els.winnerEmoji.textContent = emoji;
+    els.winnerTitle.textContent = title;
+    els.winnerScore.textContent = `${s1} : ${s2}`;
+    els.winnerSubtitle.textContent = `Раунд ${state.duelRounds} из ${state.duelRounds}`;
+    els.winnerOverlay.classList.add('show');
 
-    function updateSceneUI() {
-      const s = scenes[sceneIndex];
-      sceneBadge.textContent = customVideoUrl ? "Своё видео" : `Сцена ${sceneIndex + 1}/${scenes.length}`;
-      timeBadge.textContent = `${(s.duration / 1000).toFixed(1)} сек`;
-      genreText.textContent = customVideoUrl ? "Пользовательский ролик" : s.genre;
-      moodText.textContent = customVideoUrl ? "Озвучка без звука" : s.mood;
-      avatar.textContent = s.avatar;
-      subtitle.textContent = customVideoUrl ? "Озвучьте происходящее на видео своими словами!" : s.text;
-      timeFill.style.width = "0%";
-      micFill.style.width = "0%";
-      resultBox.classList.remove("show");
-      playBtn.disabled = true;
-      audioBlob = null;
-      recordBtn.textContent = "● Начать озвучку (отсчёт 3 сек)";
+    if (s1 !== s2) { launchConfetti(); sfx.success(); haptic([50,30,50]); }
+    else { sfx.start(); haptic(40); }
+
+    updateDuelUI(); updateNextBtnLabel();
+  }
+
+  els.customVideo.addEventListener('loadeddata', () => { els.vidLoading.style.display = 'none'; });
+  els.customVideo.addEventListener('error', () => {
+    els.vidLoading.textContent = '⚠️ Ошибка загрузки видео';
+    setTimeout(() => { els.vidLoading.style.display = 'none'; }, 2000);
+  });
+
+  $('soloBtn').addEventListener('click', function() {
+    state.isDuel = false;
+    state.duelFinished = false;
+    state.duelSceneIndices = [];
+    this.classList.add('active');
+    $('duelBtn').classList.remove('active');
+    els.scoreboard.classList.remove('show');
+    updateSceneUI();
+    sfx.click(); haptic(15);
+  });
+  $('duelBtn').addEventListener('click', function() {
+    state.isDuel = true;
+    state.currentPlayer = 1;
+    state.scores = {1:0, 2:0};
+    state.duelRound = 1;
+    state.duelFinished = false;
+    const idxs = [...Array(scenes.length).keys()];
+    for (let i = idxs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [idxs[i], idxs[j]] = [idxs[j], idxs[i]];
+    }
+    state.duelSceneIndices = idxs.slice(0, state.duelRounds);
+    state.sceneIndex = state.duelSceneIndices[0];
+    state.customVideoUrl = null;
+    this.classList.add('active');
+    $('soloBtn').classList.remove('active');
+    els.scoreboard.classList.add('show');
+    els.winnerOverlay.classList.remove('show');
+    updateSceneUI(); updateDuelUI();
+    sfx.click(); haptic(15);
+  });
+
+  document.querySelectorAll('.effect-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.effect-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      state.selectedFx = this.dataset.fx;
+      sfx.click(); haptic(15);
+    });
+  });
+
+  $('videoInput').addEventListener('change', function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    state.customVideoUrl = URL.createObjectURL(file);
+    els.customVideo.src = state.customVideoUrl;
+    els.customVideo.style.display = 'block';
+    els.avatar.style.display = 'none';
+    els.vidLoading.style.display = 'flex';
+    els.customVideo.onloadedmetadata = function() {
+      const dur = Math.min(Math.max(els.customVideo.duration * 1000, 3000), 15000);
+      scenes[state.sceneIndex].duration = Math.round(dur);
+      updateSceneUI();
+    };
+  });
+
+  function runCountdown() {
+    return new Promise(resolve => {
+      state.isCountingDown = true;
+      let count = 3;
+      els.countdown.textContent = count;
+      els.countdown.classList.add('show');
+      sfx.tick(); haptic(30);
+      const iv = setInterval(() => {
+        count--;
+        if (count > 0) {
+          els.countdown.textContent = count;
+          els.countdown.classList.remove('show'); void els.countdown.offsetWidth;
+          els.countdown.classList.add('show');
+          sfx.tick(); haptic(30);
+        } else {
+          clearInterval(iv);
+          els.countdown.classList.remove('show');
+          state.isCountingDown = false;
+          sfx.start(); haptic(60); resolve();
+        }
+      }, 800);
+    });
+  }
+
+  async function startRecordingFlow() {
+    if (state.isCountingDown || state.isRecording) return;
+    try { state.micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch(err) { alert('Нужен доступ к микрофону. Страница должна быть на HTTPS.'); return; }
+
+    await runCountdown();
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = ctx.createMediaStreamSource(state.micStream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256; source.connect(analyser);
+
+    state.mediaRecorder = new MediaRecorder(state.micStream);
+    state.chunks = []; state.voiceFrames = 0; state.totalFrames = 0;
+
+    state.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) state.chunks.push(e.data); };
+    state.mediaRecorder.onstop = () => {
+      state.audioBlob = new Blob(state.chunks, { type: state.mediaRecorder.mimeType || 'audio/webm' });
+      els.playBtn.disabled = false; els.saveBtn.disabled = false; els.shareBtn.disabled = false;
+      evaluatePerformance();
+      if (state.micStream) state.micStream.getTracks().forEach(t => t.stop());
+      els.customVideo.pause(); els.customVideo.currentTime = 0;
+    };
+
+    if (els.customVideo.style.display !== 'none') {
+      els.customVideo.currentTime = 0;
+      els.customVideo.play().catch(()=>{});
+      els.customVideo.onended = () => { if (state.isRecording) stopRecording(); };
     }
 
-    document.getElementById("soloBtn").addEventListener("click", (e) => {
-      isDuel = false;
-      e.target.classList.add("active");
-      document.getElementById("duelBtn").classList.remove("active");
-      document.getElementById("scoreboard").classList.remove("show");
-    });
+    state.mediaRecorder.start();
+    state.isRecording = true;
+    els.recordBtn.textContent = '■ Остановить';
+    els.recordBtn.classList.add('recording');
+    els.avatar.classList.add('talking');
+    els.resultBox.classList.remove('show');
 
-    document.getElementById("duelBtn").addEventListener("click", (e) => {
-      isDuel = true;
-      currentPlayer = 1;
-      scores = { 1: 0, 2: 0 };
-      e.target.classList.add("active");
-      document.getElementById("soloBtn").classList.remove("active");
-      document.getElementById("scoreboard").classList.add("show");
+    const duration = scenes[state.sceneIndex].duration;
+    const started = Date.now();
+    const freqData = new Uint8Array(analyser.frequencyBinCount);
+
+    state.recordTimer = setInterval(() => {
+      const elapsed = Date.now() - started;
+      els.timeFill.style.width = Math.min((elapsed / duration) * 100, 100) + '%';
+      analyser.getByteFrequencyData(freqData);
+      const avg = freqData.reduce((a, b) => a + b, 0) / freqData.length;
+      els.micFill.style.width = Math.min(avg * 2.4, 100) + '%';
+      state.totalFrames++; if (avg > 12) state.voiceFrames++;
+      if (elapsed >= duration) stopRecording();
+    }, 50);
+  }
+
+  function stopRecording() {
+    if (!state.isRecording) return;
+    state.isRecording = false;
+    clearInterval(state.recordTimer);
+    if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') state.mediaRecorder.stop();
+    els.recordBtn.textContent = '● Перезаписать';
+    els.recordBtn.classList.remove('recording');
+    els.avatar.classList.remove('talking');
+    els.micFill.style.width = '0%';
+    els.customVideo.pause();
+  }
+
+  function evaluatePerformance() {
+    const ratio = state.totalFrames ? state.voiceFrames / state.totalFrames : 0;
+    let pts = 0, msg = '';
+    if (ratio < 0.12) { pts = 20; msg = 'Почти не слышно — говорите громче и ближе к микрофону.'; }
+    else if (ratio > 0.88) { pts = 76; msg = 'Очень плотный текст, добавьте театральных пауз!'; }
+    else { pts = Math.min(100, Math.round(68 + ratio * 38)); msg = 'Отличный баланс реплик, эмоций и пауз!'; }
+    if (state.voiceFrames > 0 && state.voiceFrames < state.totalFrames) pts = Math.min(100, pts + 5);
+
+    state.currentScore = pts;
+    const starsCount = pts >= 90 ? 5 : pts >= 75 ? 4 : pts >= 55 ? 3 : pts >= 35 ? 2 : 1;
+    els.scoreNum.textContent = pts;
+    els.stars.textContent = '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
+    els.scoreDesc.textContent = msg;
+    els.resultBox.classList.add('show');
+
+    state.xp += Math.round(pts / 2);
+    while (state.xp >= state.level * 100) { state.xp -= state.level * 100; state.level++; }
+    updateLevelUI();
+
+    const key = state.sceneIndex + '';
+    if (!state.bestScores[key] || pts > state.bestScores[key]) state.bestScores[key] = pts;
+
+    if (state.totalRecords === 0) unlock('firstRecord');
+    if (pts >= 80) unlock('highScore');
+    if (pts >= 95) unlock('perfectScore');
+    state.totalRecords++;
+    if (state.totalRecords >= 10) unlock('tenRecords');
+    if (Object.keys(state.bestScores).length >= scenes.length) unlock('allScenes');
+
+    if (pts >= 80) { launchConfetti(); sfx.success(); haptic([30,50,30]); }
+    else if (pts >= 50) { sfx.start(); haptic(40); }
+    else { sfx.fail(); haptic(80); }
+
+    if (state.isDuel) {
+      state.scores[state.currentPlayer] += pts;
       updateDuelUI();
-    });
-
-    function updateDuelUI() {
-      document.getElementById("p1Score").textContent = `Игрок 1: ${scores[1]}`;
-      document.getElementById("p2Score").textContent = `Игрок 2: ${scores[2]}`;
-      document.getElementById("turnLabel").textContent = `Ход: Игрок ${currentPlayer}`;
     }
 
-    document.querySelectorAll(".effect-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".effect-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        selectedFx = btn.dataset.fx;
-      });
-    });
+    updateDotNav(); updateNextBtnLabel(); saveProgress();
+  }
 
-    document.getElementById("videoInput").addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      customVideoUrl = URL.createObjectURL(file);
-      customVideo.src = customVideoUrl;
-      customVideo.style.display = "block";
-      avatar.style.display = "none";
-      customVideo.onloadedmetadata = () => {
-        const dur = Math.min(Math.max(customVideo.duration * 1000, 3000), 15000);
-        scenes[sceneIndex].duration = Math.round(dur);
-        updateSceneUI();
-      };
-    });
+  async function playWithEffects() {
+    if (!state.audioBlob) return;
+    const url = URL.createObjectURL(state.audioBlob);
+    const audio = new Audio(url);
+    audio.preservesPitch = false;
+    let rate = 1.0;
+    if (state.selectedFx === 'chipmunk') rate = 1.38;
+    else if (state.selectedFx === 'villain') rate = 0.76;
+    else if (state.selectedFx === 'robot') rate = 0.9;
+    audio.playbackRate = rate;
 
-    function runCountdown() {
-      return new Promise(resolve => {
-        isCountingDown = true;
-        let count = 3;
-        countdown.textContent = count;
-        countdown.classList.add("show");
-        const iv = setInterval(() => {
-          count--;
-          if (count > 0) {
-            countdown.textContent = count;
-          } else {
-            clearInterval(iv);
-            countdown.classList.remove("show");
-            isCountingDown = false;
-            resolve();
-          }
-        }, 700);
-      });
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = ctx.createMediaElementSource(audio);
+
+    if (state.selectedFx === 'radio') {
+      const filter = ctx.createBiquadFilter(); filter.type = 'bandpass';
+      filter.frequency.value = 1400; filter.Q.value = 2.5;
+      src.connect(filter); filter.connect(ctx.destination);
+    } else if (state.selectedFx === 'robot') {
+      const filter = ctx.createBiquadFilter(); filter.type = 'bandpass';
+      filter.frequency.value = 800; filter.Q.value = 8;
+      src.connect(filter); filter.connect(ctx.destination);
+    } else if (state.selectedFx === 'echo') {
+      const delay = ctx.createDelay(); delay.delayTime.value = 0.25;
+      const fb = ctx.createGain(); fb.gain.value = 0.35;
+      src.connect(ctx.destination); src.connect(delay);
+      delay.connect(fb); fb.connect(delay); delay.connect(ctx.destination);
+    } else { src.connect(ctx.destination); }
+
+    if (els.customVideo.style.display !== 'none') {
+      els.customVideo.currentTime = 0;
+      els.customVideo.playbackRate = rate;
+      els.customVideo.play().catch(()=>{});
     }
+    els.avatar.classList.add('talking');
+    audio.onended = () => {
+      els.avatar.classList.remove('talking');
+      els.customVideo.pause();
+    };
+    try { await audio.play(); } catch(e) {}
+    haptic(20);
+  }
 
-    async function startRecordingFlow() {
-      if (isCountingDown) return;
-      try {
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch (err) {
-        alert("Нужен доступ к микрофону и запуск страницы по HTTPS.");
+  function downloadRecording() {
+    if (!state.audioBlob) return;
+    const url = URL.createObjectURL(state.audioBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `озвучка-сцена-${state.sceneIndex+1}.webm`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000); haptic(20);
+  }
+  async function shareResult() {
+    const text = `Я озвучил сцену «${scenes[state.sceneIndex].genre}» на ${state.currentScore}/100 в Озвучка-Баттл PRO! 🎙️`;
+    if (navigator.share) { try { await navigator.share({ title: 'Озвучка-Баттл PRO', text }); } catch(e){} }
+    else { try { await navigator.clipboard.writeText(text); alert('Скопировано!'); } catch(e) { alert(text); } }
+    haptic(20);
+  }
+
+  els.recordBtn.addEventListener('click', () => {
+    if (state.duelFinished) { showWinner(); return; }
+    if (state.isRecording) stopRecording(); else startRecordingFlow();
+  });
+  els.playBtn.addEventListener('click', playWithEffects);
+  els.saveBtn.addEventListener('click', downloadRecording);
+  els.shareBtn.addEventListener('click', shareResult);
+  els.prevBtn.addEventListener('click', () => {
+    if (state.isDuel) return;
+    if (state.isRecording) stopRecording();
+    state.customVideoUrl = null;
+    state.sceneIndex = (state.sceneIndex - 1 + scenes.length) % scenes.length;
+    updateSceneUI(); sfx.click(); haptic(15);
+  });
+  els.nextBtn.addEventListener('click', () => {
+    if (state.isRecording) stopRecording();
+
+    if (state.isDuel && !state.duelFinished) {
+      const hasRecorded = state.audioBlob !== null;
+      if (!hasRecorded) return;
+
+      if (state.currentPlayer === 1) {
+        state.currentPlayer = 2;
+        state.customVideoUrl = null;
+        updateSceneUI(); updateDuelUI();
+        sfx.click(); haptic(15);
         return;
       }
-
-      await runCountdown();
-
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioCtx.createMediaStreamSource(micStream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-
-      mediaRecorder = new MediaRecorder(micStream);
-      chunks = [];
-      voiceFrames = 0;
-      totalFrames = 0;
-
-      mediaRecorder.ondataavailable = e => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        audioBlob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
-        playBtn.disabled = false;
-        evaluatePerformance();
-        micStream.getTracks().forEach(t => t.stop());
-        if (customVideoUrl) {
-          customVideo.pause();
-          customVideo.currentTime = 0;
-        }
-      };
-
-      if (customVideoUrl) {
-        customVideo.currentTime = 0;
-        customVideo.play();
-      }
-
-      mediaRecorder.start();
-      isRecording = true;
-      recordBtn.textContent = "■ Остановить запись";
-      recordBtn.classList.add("recording");
-      avatar.classList.add("talking");
-      resultBox.classList.remove("show");
-
-      const duration = scenes[sceneIndex].duration;
-      const started = Date.now();
-      const freqData = new Uint8Array(analyser.frequencyBinCount);
-
-      recordTimer = setInterval(() => {
-        const elapsed = Date.now() - started;
-        timeFill.style.width = Math.min((elapsed / duration) * 100, 100) + "%";
-
-        analyser.getByteFrequencyData(freqData);
-        const avg = freqData.reduce((a, b) => a + b, 0) / freqData.length;
-        micFill.style.width = Math.min(avg * 2.4, 100) + "%";
-
-        totalFrames++;
-        if (avg > 12) voiceFrames++;
-
-        if (elapsed >= duration) stopRecording();
-      }, 50);
+      if (state.duelRound >= state.duelRounds) { showWinner(); return; }
+      state.duelRound++;
+      state.currentPlayer = 1;
+      state.sceneIndex = state.duelSceneIndices[state.duelRound - 1];
+      state.customVideoUrl = null;
+      updateSceneUI(); updateDuelUI();
+      sfx.click(); haptic(15);
+      return;
     }
+    if (state.duelFinished) { showWinner(); return; }
 
-    function stopRecording() {
-      if (!isRecording) return;
-      isRecording = false;
-      clearInterval(recordTimer);
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-      }
-      recordBtn.textContent = "● Перезаписать дубль";
-      recordBtn.classList.remove("recording");
-      avatar.classList.remove("talking");
-      micFill.style.width = "0%";
-    }
+    state.customVideoUrl = null;
+    state.sceneIndex = (state.sceneIndex + 1) % scenes.length;
+    updateSceneUI(); sfx.click(); haptic(15);
+  });
+  els.soundBtn.addEventListener('click', () => {
+    state.soundOn = !state.soundOn;
+    els.soundBtn.textContent = state.soundOn ? '🔊' : '🔇';
+    if (state.soundOn) sfx.click(); haptic(15);
+  });
 
-    function evaluatePerformance() {
-      const ratio = totalFrames ? voiceFrames / totalFrames : 0;
-      let pts = 0;
-      let msg = "";
+  $('newDuelBtn').addEventListener('click', () => {
+    els.winnerOverlay.classList.remove('show');
+    $('duelBtn').click();
+  });
+  $('closeWinnerBtn').addEventListener('click', () => {
+    els.winnerOverlay.classList.remove('show');
+    $('soloBtn').click();
+  });
 
-      if (ratio < 0.12) {
-        pts = 20;
-        msg = "Почти не слышно — говорите громче и ближе к микрофону.";
-      } else if (ratio > 0.88) {
-        pts = 76;
-        msg = "Очень плотный текст, добавьте чуть больше театральных пауз!";
-      } else {
-        pts = Math.min(100, Math.round(68 + ratio * 38));
-        msg = "Отличный баланс реплик, эмоций и пауз!";
-      }
-
-      scoreNum.textContent = `${pts} / 100`;
-      scoreDesc.textContent = msg;
-      resultBox.classList.add("show");
-
-      if (isDuel) {
-        scores[currentPlayer] += pts;
-        currentPlayer = currentPlayer === 1 ? 2 : 1;
-        updateDuelUI();
-      }
-    }
-
-    async function playWithEffects() {
-      if (!audioBlob) return;
-      const url = URL.createObjectURL(audioBlob);
-      const audio = new Audio(url);
-      audio.preservesPitch = false;
-
-      if (selectedFx === "chipmunk") audio.playbackRate = 1.38;
-      else if (selectedFx === "villain") audio.playbackRate = 0.76;
-      else audio.playbackRate = 1.0;
-
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const src = ctx.createMediaElementSource(audio);
-
-      if (selectedFx === "radio") {
-        const filter = ctx.createBiquadFilter();
-        filter.type = "bandpass";
-        filter.frequency.value = 1400;
-        filter.Q.value = 2.5;
-        src.connect(filter);
-        filter.connect(ctx.destination);
-      } else {
-        src.connect(ctx.destination);
-      }
-
-      if (customVideoUrl) {
-        customVideo.currentTime = 0;
-        customVideo.playbackRate = audio.playbackRate;
-        customVideo.play();
-      }
-
-      avatar.classList.add("talking");
-      audio.onended = () => {
-        avatar.classList.remove("talking");
-        if (customVideoUrl) customVideo.pause();
-      };
-
-      await audio.play();
-    }
-
-    recordBtn.addEventListener("click", () => {
-      if (isRecording) stopRecording();
-      else startRecordingFlow();
-    });
-
-    playBtn.addEventListener("click", playWithEffects);
-
-    nextBtn.addEventListener("click", () => {
-      if (isRecording) stopRecording();
-      customVideoUrl = null;
-      customVideo.style.display = "none";
-      avatar.style.display = "block";
-      sceneIndex = (sceneIndex + 1) % scenes.length;
-      updateSceneUI();
-    });
-
-    updateSceneUI();
-  </script>
+  loadProgress();
+  updateSceneUI();
+})();
+</script>
 </body>
 </html>
