@@ -263,18 +263,17 @@
   'use strict';
 
   const scenes = [
-    { genre:"Мультфильм", mood:"Паника", avatar:"🐰", text:"«Я не трогал твои орехи! Это всё соседский кот!»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
-    { genre:"Фантастика", mood:"Удивление", avatar:"👽", text:"«Земляне, мы прилетели с миром... но припарковались на ваш гараж.»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" },
-    { genre:"Фэнтези", mood:"Драма", avatar:"🐉", text:"«Синтел, я ждал тебя сотни лет... где ты была?»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" },
-    { genre:"Боевик", mood:"Героизм", avatar:"🤖", text:"«Это мой последний бой. Передай маме, что я выключил плиту.»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" },
-    { genre:"Экшн", mood:"Паника", avatar:"🔥", text:"«Пожар! Хватай кота и печеньки!»", duration:5500, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" },
-    { genre:"Приключение", mood:"Азарт", avatar:"🏃", text:"«Беги! Я прикрою... или нет. Я тоже бегу!»", duration:5500, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" },
-    { genre:"Комедия", mood:"Радость", avatar:"🎉", text:"«Я выиграл! Хотя нет, это была реклама...»", duration:5500, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" },
-    { genre:"Гонки", mood:"Адреналин", avatar:"🚗", text:"«Педаль в пол! Если что — я не я, и коробка не моя.»", duration:5500, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" },
-    { genre:"Драма", mood:"Отчаяние", avatar:"😱", text:"«Я ждал тебя 20 лет... а ты пришёл за солью.»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4" },
-    { genre:"Авто", mood:"Спокойствие", avatar:"🚙", text:"«Это не просто машина. Это мой маленький танк.»", duration:6000, video:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4" }
-  ];
-
+  { genre:"Мультфильм", mood:"Паника", avatar:"🐰", text:"«Я не трогал твои орехи! Это всё соседский кот!»", duration:6000, video:"https://cdn.pixabay.com/video/2024/11/23/242945_large.mp4" },
+  { genre:"Фантастика", mood:"Удивление", avatar:"👽", text:"«Земляне, мы прилетели с миром... но припарковались на ваш гараж.»", duration:6000, video:"https://cdn.pixabay.com/video/2020/01/12/31175-384523301_large.mp4" },
+  { genre:"Фэнтези", mood:"Драма", avatar:"🐉", text:"«Синтел, я ждал тебя сотни лет... где ты была?»", duration:6000, video:"https://cdn.pixabay.com/video/2022/03/15/110879-689510470_large.mp4" },
+  { genre:"Боевик", mood:"Героизм", avatar:"🤖", text:"«Это мой последний бой. Передай маме, что я выключил плиту.»", duration:6000, video:"https://cdn.pixabay.com/video/2022/10/14/134822-760690982_large.mp4" },
+  { genre:"Экшн", mood:"Паника", avatar:"🔥", text:"«Пожар! Хватай кота и печеньки!»", duration:5500, video:"https://cdn.pixabay.com/video/2017/06/05/9584-220312371_large.mp4" },
+  { genre:"Приключение", mood:"Азарт", avatar:"🏃", text:"«Беги! Я прикрою... или нет. Я тоже бегу!»", duration:5500, video:"https://cdn.pixabay.com/video/2019/02/05/21175-315405446_large.mp4" },
+  { genre:"Комедия", mood:"Радость", avatar:"🎉", text:"«Я выиграл! Хотя нет, это была реклама...»", duration:5500, video:"https://cdn.pixabay.com/video/2024/11/27/243647_large.mp4" },
+  { genre:"Гонки", mood:"Адреналин", avatar:"🚗", text:"«Педаль в пол! Если что — я не я, и коробка не моя.»", duration:5500, video:"https://cdn.pixabay.com/video/2024/08/03/224691_large.mp4" },
+  { genre:"Драма", mood:"Отчаяние", avatar:"😱", text:"«Я ждал тебя 20 лет... а ты пришёл за солью.»", duration:6000, video:"https://cdn.pixabay.com/video/2020/01/12/31175-384523301_large.mp4" },
+  { genre:"Авто", mood:"Спокойствие", avatar:"🚙", text:"«Это не просто машина. Это мой маленький танк.»", duration:6000, video:"https://cdn.pixabay.com/video/2022/03/15/110879-689510470_large.mp4" }
+];
   const state = {
     sceneIndex: 0,
     isDuel: false,
