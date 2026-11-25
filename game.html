@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Озвучка-Баттл — Прототип</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161a22;
+      --surface-2: #1f2530;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warn: #f59e0b;
+      --border: #2a313f;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100dvh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 460px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 { font-size: 18px; margin: 0; font-weight: 700; }
+
+    .pills {
+      display: flex;
+      gap: 6px;
+    }
+
+    .pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .mode-btn {
+      padding: 8px;
+      font-size: 13px;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 9px;
+    }
+
+    .mode-btn.active {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .stage {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .countdown-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(13, 15, 20, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      font-weight: 800;
+      color: var(--warn);
+      z-index: 10;
+    }
+
+    .countdown-overlay.show { display: flex; }
+
+    .scene-meta {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .character {
+      font-size: 64px;
+      line-height: 1.1;
+      margin: 4px 0;
+    }
+
+    .character.talking {
+      animation: talk 0.3s infinite alternate;
+    }
+
+    @keyframes talk {
+      from { transform: scale(1) rotate(-3deg); }
+      to { transform: scale(1.1) rotate(3deg); }
+    }
+
+    video {
+      width: 100%;
+      max-height: 190px;
+      border-radius: 12px;
+      background: #000;
+      display: none;
+      object-fit: cover;
+    }
+
+    .subtitle {
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.35;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bars {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .bar-row span { width: 58px; text-align: left; }
+
+    .track {
+      flex: 1;
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .fill-time {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.08s linear;
+    }
+
+    .fill-mic {
+      height: 100%;
+      width: 0%;
+      background: var(--success);
+      transition: width 0.05s linear;
+    }
+
+    .effects {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+      background: var(--accent);
+      padding: 13px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.recording { background: var(--danger); }
+    button.secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .effect-btn {
+      padding: 9px 4px;
+      font-size: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .effect-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(59, 130, 246, 0.16);
+    }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .result {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .result.show { display: flex; }
+
+    .score-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .score-num {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--success);
+    }
+
+    .scoreboard {
+      display: none;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .scoreboard.show { display: flex; }
+
+    .upload-label {
+      display: block;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🎙️ Озвучка-Баттл</h1>
+      <div class="pills">
+        <div class="pill" id="sceneBadge">Сцена 1/4</div>
+        <div class="pill" id="timeBadge">5.0 сек</div>
+      </div>
+    </header>
+
+    <div class="mode-switch">
+      <button class="mode-btn active" id="soloBtn" type="button">Соло-режим</button>
+      <button class="mode-btn" id="duelBtn" type="button">Дуэль (2 игрока)</button>
+    </div>
+
+    <div class="scoreboard" id="scoreboard">
+      <span id="p1Score">Игрок 1: 0</span>
+      <strong id="turnLabel">Ход: Игрок 1</strong>
+      <span id="p2Score">Игрок 2: 0</span>
+    </div>
+
+    <div class="stage">
+      <div class="countdown-overlay" id="countdown">3</div>
+      <div class="scene-meta">
+        <span id="genreText">Мультфильм</span>
+        <span id="moodText">Эмоция: Паника</span>
+      </div>
+
+      <div class="character" id="avatar">🐿️</div>
+      <video id="customVideo" playsinline muted></video>
+      <div class="subtitle" id="subtitle">«Я не трогал твои орехи! Это всё соседский кот!»</div>
+
+      <div class="bars">
+        <div class="bar-row">
+          <span>Таймер</span>
+          <div class="track"><div class="fill-time" id="timeFill"></div></div>
+        </div>
+        <div class="bar-row">
+          <span>Голос</span>
+          <div class="track"><div class="fill-mic" id="micFill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <button id="recordBtn" type="button">● Начать озвучку (отсчёт 3 сек)</button>
+
+    <div class="effects">
+      <button class="effect-btn active" data-fx="normal" type="button">Оригинал</button>
+      <button class="effect-btn" data-fx="chipmunk" type="button">Бурундук</button>
+      <button class="effect-btn" data-fx="villain" type="button">Злодей</button>
+      <button class="effect-btn" data-fx="radio" type="button">Рация</button>
+    </div>
+
+    <div class="row-2">
+      <button class="secondary" id="playBtn" type="button" disabled>▶ Слушать дубль</button>
+      <button class="secondary" id="nextBtn" type="button">Следующая →</button>
+    </div>
+
+    <label class="upload-label">
+      🎬 Загрузить своё видео/мультик из галереи для озвучки
+      <input type="file" id="videoInput" accept="video/*" />
+    </label>
+
+    <div class="result" id="resultBox">
+      <div class="score-line">
+        <span>Оценка дубля</span>
+        <span class="score-num" id="scoreNum">0 / 100</span>
+      </div>
+      <div style="font-size: 13px; color: var(--muted);" id="scoreDesc"></div>
+    </div>
+  </div>
+
+  <script>
+    const scenes = [
+      {
+        genre: "Мультфильм",
+        mood: "Эмоция: Паника",
+        avatar: "🐿️",
+        text: "«Я не трогал твои орехи! Это всё соседский кот!»",
+        duration: 5000
+      },
+      {
+        genre: "Боевик",
+        mood: "Эмоция: Пафос",
+        avatar: "🕵️‍♂️",
+        text: "«Не режь красный провод... А, ладно, всё равно уже поздно!»",
+        duration: 5500
+      },
+      {
+        genre: "Фантастика",
+        mood: "Эмоция: Удивление",
+        avatar: "👽",
+        text: "«Земляне, мы прилетели с миром... но случайно припарковались на ваш гараж.»",
+        duration: 6000
+      },
+      {
+        genre: "Сказка",
+        mood: "Эмоция: Злодейский смех",
+        avatar: "🧙‍♂️",
+        text: "«Никто не пройдёт через этот мост! Кроме тех, у кого есть печеньки.»",
+        duration: 5500
+      }
+    ];
+
+    let sceneIndex = 0;
+    let isDuel = false;
+    let currentPlayer = 1;
+    let scores = { 1: 0, 2: 0 };
+
+    let mediaRecorder = null;
+    let chunks = [];
+    let audioBlob = null;
+    let isRecording = false;
+    let isCountingDown = false;
+    let recordTimer = null;
+    let micStream = null;
+    let voiceFrames = 0;
+    let totalFrames = 0;
+    let selectedFx = "normal";
+    let customVideoUrl = null;
+
+    const recordBtn = document.getElementById("recordBtn");
+    const playBtn = document.getElementById("playBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const avatar = document.getElementById("avatar");
+    const customVideo = document.getElementById("customVideo");
+    const subtitle = document.getElementById("subtitle");
+    const sceneBadge = document.getElementById("sceneBadge");
+    const timeBadge = document.getElementById("timeBadge");
+    const genreText = document.getElementById("genreText");
+    const moodText = document.getElementById("moodText");
+    const timeFill = document.getElementById("timeFill");
+    const micFill = document.getElementById("micFill");
+    const countdown = document.getElementById("countdown");
+    const resultBox = document.getElementById("resultBox");
+    const scoreNum = document.getElementById("scoreNum");
+    const scoreDesc = document.getElementById("scoreDesc");
+
+    function updateSceneUI() {
+      const s = scenes[sceneIndex];
+      sceneBadge.textContent = customVideoUrl ? "Своё видео" : `Сцена ${sceneIndex + 1}/${scenes.length}`;
+      timeBadge.textContent = `${(s.duration / 1000).toFixed(1)} сек`;
+      genreText.textContent = customVideoUrl ? "Пользовательский ролик" : s.genre;
+      moodText.textContent = customVideoUrl ? "Озвучка без звука" : s.mood;
+      avatar.textContent = s.avatar;
+      subtitle.textContent = customVideoUrl ? "Озвучьте происходящее на видео своими словами!" : s.text;
+      timeFill.style.width = "0%";
+      micFill.style.width = "0%";
+      resultBox.classList.remove("show");
+      playBtn.disabled = true;
+      audioBlob = null;
+      recordBtn.textContent = "● Начать озвучку (отсчёт 3 сек)";
+    }
+
+    document.getElementById("soloBtn").addEventListener("click", (e) => {
+      isDuel = false;
+      e.target.classList.add("active");
+      document.getElementById("duelBtn").classList.remove("active");
+      document.getElementById("scoreboard").classList.remove("show");
+    });
+
+    document.getElementById("duelBtn").addEventListener("click", (e) => {
+      isDuel = true;
+      currentPlayer = 1;
+      scores = { 1: 0, 2: 0 };
+      e.target.classList.add("active");
+      document.getElementById("soloBtn").classList.remove("active");
+      document.getElementById("scoreboard").classList.add("show");
+      updateDuelUI();
+    });
+
+    function updateDuelUI() {
+      document.getElementById("p1Score").textContent = `Игрок 1: ${scores[1]}`;
+      document.getElementById("p2Score").textContent = `Игрок 2: ${scores[2]}`;
+      document.getElementById("turnLabel").textContent = `Ход: Игрок ${currentPlayer}`;
+    }
+
+    document.querySelectorAll(".effect-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".effect-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedFx = btn.dataset.fx;
+      });
+    });
+
+    document.getElementById("videoInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      customVideoUrl = URL.createObjectURL(file);
+      customVideo.src = customVideoUrl;
+      customVideo.style.display = "block";
+      avatar.style.display = "none";
+      customVideo.onloadedmetadata = () => {
+        const dur = Math.min(Math.max(customVideo.duration * 1000, 3000), 15000);
+        scenes[sceneIndex].duration = Math.round(dur);
+        updateSceneUI();
+      };
+    });
+
+    function runCountdown() {
+      return new Promise(resolve => {
+        isCountingDown = true;
+        let count = 3;
+        countdown.textContent = count;
+        countdown.classList.add("show");
+        const iv = setInterval(() => {
+          count--;
+          if (count > 0) {
+            countdown.textContent = count;
+          } else {
+            clearInterval(iv);
+            countdown.classList.remove("show");
+            isCountingDown = false;
+            resolve();
+          }
+        }, 700);
+      });
+    }
+
+    async function startRecordingFlow() {
+      if (isCountingDown) return;
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        alert("Нужен доступ к микрофону и запуск страницы по HTTPS.");
+        return;
+      }
+
+      await runCountdown();
+
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.createMediaStreamSource(micStream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+
+      mediaRecorder = new MediaRecorder(micStream);
+      chunks = [];
+      voiceFrames = 0;
+      totalFrames = 0;
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
+        playBtn.disabled = false;
+        evaluatePerformance();
+        micStream.getTracks().forEach(t => t.stop());
+        if (customVideoUrl) {
+          customVideo.pause();
+          customVideo.currentTime = 0;
+        }
+      };
+
+      if (customVideoUrl) {
+        customVideo.currentTime = 0;
+        customVideo.play();
+      }
+
+      mediaRecorder.start();
+      isRecording = true;
+      recordBtn.textContent = "■ Остановить запись";
+      recordBtn.classList.add("recording");
+      avatar.classList.add("talking");
+      resultBox.classList.remove("show");
+
+      const duration = scenes[sceneIndex].duration;
+      const started = Date.now();
+      const freqData = new Uint8Array(analyser.frequencyBinCount);
+
+      recordTimer = setInterval(() => {
+        const elapsed = Date.now() - started;
+        timeFill.style.width = Math.min((elapsed / duration) * 100, 100) + "%";
+
+        analyser.getByteFrequencyData(freqData);
+        const avg = freqData.reduce((a, b) => a + b, 0) / freqData.length;
+        micFill.style.width = Math.min(avg * 2.4, 100) + "%";
+
+        totalFrames++;
+        if (avg > 12) voiceFrames++;
+
+        if (elapsed >= duration) stopRecording();
+      }, 50);
+    }
+
+    function stopRecording() {
+      if (!isRecording) return;
+      isRecording = false;
+      clearInterval(recordTimer);
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      recordBtn.textContent = "● Перезаписать дубль";
+      recordBtn.classList.remove("recording");
+      avatar.classList.remove("talking");
+      micFill.style.width = "0%";
+    }
+
+    function evaluatePerformance() {
+      const ratio = totalFrames ? voiceFrames / totalFrames : 0;
+      let pts = 0;
+      let msg = "";
+
+      if (ratio < 0.12) {
+        pts = 20;
+        msg = "Почти не слышно — говорите громче и ближе к микрофону.";
+      } else if (ratio > 0.88) {
+        pts = 76;
+        msg = "Очень плотный текст, добавьте чуть больше театральных пауз!";
+      } else {
+        pts = Math.min(100, Math.round(68 + ratio * 38));
+        msg = "Отличный баланс реплик, эмоций и пауз!";
+      }
+
+      scoreNum.textContent = `${pts} / 100`;
+      scoreDesc.textContent = msg;
+      resultBox.classList.add("show");
+
+      if (isDuel) {
+        scores[currentPlayer] += pts;
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        updateDuelUI();
+      }
+    }
+
+    async function playWithEffects() {
+      if (!audioBlob) return;
+      const url = URL.createObjectURL(audioBlob);
+      const audio = new Audio(url);
+      audio.preservesPitch = false;
+
+      if (selectedFx === "chipmunk") audio.playbackRate = 1.38;
+      else if (selectedFx === "villain") audio.playbackRate = 0.76;
+      else audio.playbackRate = 1.0;
+
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaElementSource(audio);
+
+      if (selectedFx === "radio") {
+        const filter = ctx.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.frequency.value = 1400;
+        filter.Q.value = 2.5;
+        src.connect(filter);
+        filter.connect(ctx.destination);
+      } else {
+        src.connect(ctx.destination);
+      }
+
+      if (customVideoUrl) {
+        customVideo.currentTime = 0;
+        customVideo.playbackRate = audio.playbackRate;
+        customVideo.play();
+      }
+
+      avatar.classList.add("talking");
+      audio.onended = () => {
+        avatar.classList.remove("talking");
+        if (customVideoUrl) customVideo.pause();
+      };
+
+      await audio.play();
+    }
+
+    recordBtn.addEventListener("click", () => {
+      if (isRecording) stopRecording();
+      else startRecordingFlow();
+    });
+
+    playBtn.addEventListener("click", playWithEffects);
+
+    nextBtn.addEventListener("click", () => {
+      if (isRecording) stopRecording();
+      customVideoUrl = null;
+      customVideo.style.display = "none";
+      avatar.style.display = "block";
+      sceneIndex = (sceneIndex + 1) % scenes.length;
+      updateSceneUI();
+    });
+
+    updateSceneUI();
+  </script>
+</body>
+</html>
